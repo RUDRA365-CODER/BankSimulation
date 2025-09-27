@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     double maxWaitTime = 0;
     int totalServed = 0;
 
-    // Generate all customer arrival events
+    
     for (int i = 0; i < numCustomers; i++) {
         double arrTime = simulationTime * rand() / (float)RAND_MAX;
         double servTime = 2 * avgServiceTime * rand() / (float)RAND_MAX;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         enqueue(customerQueue, cust);
     }
 
-    // Simulation loop
+    
     while (eventQueue) {
         Event event = popEvent(&eventQueue);
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
                 if (tellers[i].availableTime <= event.time) {
                     Customer cust = dequeue(customerQueue);
 
-                    // Fix: start time is max of arrival and teller availability
+                   
                     double startTime = fmax(cust.arrivalTime, tellers[i].availableTime);
                     cust.startServiceTime = startTime;
 
@@ -86,14 +86,14 @@ int main(int argc, char *argv[]) {
     }
     double stdDeviation = sqrt(varianceSum / totalServed);
 
-    // Print results
+   
     printf("Total customers served: %d\n", totalServed);
     printf("Average time in bank: %.2f minutes\n", averageTime);
     printf("Extra average wait time: %.2f minutes\n", extraAverageTime);
     printf("Maximum wait time: %.2f minutes\n", maxWaitTime);
     printf("Standard deviation of time: %.2f minutes\n", stdDeviation);
 
-    // Save results for GNUPlot
+    
     FILE *fp = fopen("test/results.txt", "a");
     if (fp != NULL) {
         fprintf(fp, "%d %.2f\n", numTellers, averageTime);
