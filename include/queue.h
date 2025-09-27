@@ -3,19 +3,25 @@
 
 #include "customer.h"
 
-typedef struct Node {
-    Customer customer;
-    struct Node *next;
-} Node;
+// Queue node
+typedef struct QueueNode {
+    Customer cust;
+    struct QueueNode *next;
+} QueueNode;
 
-typedef struct {
-    Node *front;
-    Node *rear;
+// Queue structure
+typedef struct Queue {
+    QueueNode *front;
+    QueueNode *rear;
+    int size;
 } Queue;
 
+// Function declarations
 Queue* createQueue();
-void enqueue(Queue *q, Customer c);
+int isQueueEmpty(Queue *q);
+void enqueue(Queue *q, Customer cust);
 Customer dequeue(Queue *q);
-int isEmpty(Queue *q);
+Customer peekQueue(Queue *q);
+void freeQueue(Queue *q);
 
 #endif

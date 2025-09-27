@@ -20,89 +20,121 @@ int main(int argc, char *argv[]) {
     double simulationTime = atof(argv[3]);
     double avgServiceTime = atof(argv[4]);
 
-    EventNode *eventQueue = NULL;
-    Queue *customerQueue = createQueue();
+    // Create queues
+    Queue *singleQueue = createQueue();
+    Queue **separateQueues = (Queue**)malloc(numTellers * sizeof(Queue*));
+    for (int i = 0; i < numTellers; i++) {
+        separateQueues[i] = createQueue();
+    }
+
     Teller *tellers = createTellers(numTellers);
 
     double *customerTimes = malloc(sizeof(double) * numCustomers);
-    double totalTimeInBank = 0;
-    double totalWaitTime = 0;
-    double maxWaitTime = 0;
-    int totalServed = 0;
+    double totalTimeInBankSingle = 0, totalWaitTimeSingle = 0, maxWaitSingle = 0;
+    double totalTimeInBankMulti = 0, totalWaitTimeMulti = 0, maxWaitMulti = 0;
+    int totalServedSingle = 0, totalServedMulti = 0;
 
-    
+    // Generate customers
+    Customer *customers = malloc(sizeof(Customer) * numCustomers);
     for (int i = 0; i < numCustomers; i++) {
         double arrTime = simulationTime * rand() / (float)RAND_MAX;
         double servTime = 2 * avgServiceTime * rand() / (float)RAND_MAX;
+        customers[i] = (Customer){ i, arrTime, servTime, 0 };
+        enqueue(singleQueue, customers[i]);
 
-        Event ev = { i, ARRIVAL, arrTime };
-        eventQueue = insertEvent(eventQueue, ev);
-
-        Customer cust = { i, arrTime, servTime, 0 };
-        enqueue(customerQueue, cust);
+        // choose random queue initially for separate mode
+        int qIndex = rand() % numTellers;
+        enqueue(separateQueues[qIndex], customers[i]);
     }
 
-    
-    while (eventQueue) {
-        Event event = popEvent(&eventQueue);
+    // ---- Simulation for single queue ----
+    for (int i = 0; i < numTellers; i++) tellers[i].availableTime = 0;
+    while (!isQueueEmpty(singleQueue)) {
+        Customer cust = dequeue(singleQueue);
 
-        if (event.type == ARRIVAL) {
-            for (int i = 0; i < numTellers; i++) {
-                if (tellers[i].availableTime <= event.time) {
-                    Customer cust = dequeue(customerQueue);
+        // Find earliest available teller
+        int chosen = 0;
+        double minAvail = tellers[0].availableTime;
+        for (int i = 1; i < numTellers; i++) {
+            if (tellers[i].availableTime < minAvail) {
+                minAvail = tellers[i].availableTime;
+                chosen = i;
+            }
+        }
 
-                   
-                    double startTime = fmax(cust.arrivalTime, tellers[i].availableTime);
-                    cust.startServiceTime = startTime;
+        double startTime = fmax(cust.arrivalTime, tellers[chosen].availableTime);
+        cust.startServiceTime = startTime;
 
-                    double waitTime = cust.startServiceTime - cust.arrivalTime;
-                    if (waitTime < 0) waitTime = 0; // Prevent negative wait time
-                    totalWaitTime += waitTime;
-                    if (waitTime > maxWaitTime) maxWaitTime = waitTime;
+        double waitTime = startTime - cust.arrivalTime;
+        if (waitTime < 0) waitTime = 0; // clamp
 
-                    double totalCustomerTime = waitTime + cust.serviceTime;
-                    customerTimes[cust.id] = totalCustomerTime;
+        totalWaitTimeSingle += waitTime;
+        if (waitTime > maxWaitSingle) maxWaitSingle = waitTime;
 
-                    totalTimeInBank += totalCustomerTime;
-                    tellers[i].totalServiceTime += cust.serviceTime;
-                    tellers[i].availableTime = cust.startServiceTime + cust.serviceTime;
+        double totalCustTime = waitTime + cust.serviceTime;
+        totalTimeInBankSingle += totalCustTime;
+        customerTimes[cust.id] = totalCustTime;
 
-                    Event dep = { cust.id, DEPARTURE, tellers[i].availableTime };
-                    eventQueue = insertEvent(eventQueue, dep);
+        tellers[chosen].availableTime = cust.startServiceTime + cust.serviceTime;
+        totalServedSingle++;
+    }
 
-                    totalServed++;
-                    break;
-                }
+    // ---- Simulation for separate queues ----
+    for (int i = 0; i < numTellers; i++) tellers[i].availableTime = 0;
+    int customersLeft = numCustomers;
+    while (customersLeft > 0) {
+        for (int i = 0; i < numTellers; i++) {
+            if (!isQueueEmpty(separateQueues[i])) {
+                Customer cust = dequeue(separateQueues[i]);
+
+                double startTime = fmax(cust.arrivalTime, tellers[i].availableTime);
+                cust.startServiceTime = startTime;
+
+                double waitTime = startTime - cust.arrivalTime;
+                if (waitTime < 0) waitTime = 0;
+
+                totalWaitTimeMulti += waitTime;
+                if (waitTime > maxWaitMulti) maxWaitMulti = waitTime;
+
+                double totalCustTime = waitTime + cust.serviceTime;
+                totalTimeInBankMulti += totalCustTime;
+                customerTimes[cust.id] = totalCustTime;
+
+                tellers[i].availableTime = cust.startServiceTime + cust.serviceTime;
+                totalServedMulti++;
+                customersLeft--;
             }
         }
     }
 
-    double averageTime = totalTimeInBank / totalServed;
-    double extraAverageTime = totalWaitTime / totalServed;
+    // ---- Stats ----
+    double avgTimeSingle = totalTimeInBankSingle / totalServedSingle;
+    double avgWaitSingle = totalWaitTimeSingle / totalServedSingle;
 
-    double varianceSum = 0;
-    for (int i = 0; i < totalServed; i++) {
-        varianceSum += pow(customerTimes[i] - averageTime, 2);
-    }
-    double stdDeviation = sqrt(varianceSum / totalServed);
+    double avgTimeMulti = totalTimeInBankMulti / totalServedMulti;
+    double avgWaitMulti = totalWaitTimeMulti / totalServedMulti;
 
-   
-    printf("Total customers served: %d\n", totalServed);
-    printf("Average time in bank: %.2f minutes\n", averageTime);
-    printf("Extra average wait time: %.2f minutes\n", extraAverageTime);
-    printf("Maximum wait time: %.2f minutes\n", maxWaitTime);
-    printf("Standard deviation of time: %.2f minutes\n", stdDeviation);
+    printf("\n--- Single Queue Mode ---\n");
+    printf("Total customers served: %d\n", totalServedSingle);
+    printf("Average time in bank: %.2f minutes\n", avgTimeSingle);
+    printf("Average wait time: %.2f minutes\n", avgWaitSingle);
+    printf("Maximum wait time: %.2f minutes\n", maxWaitSingle);
 
-    
-    FILE *fp = fopen("test/results.txt", "a");
-    if (fp != NULL) {
-        fprintf(fp, "%d %.2f\n", numTellers, averageTime);
-        fclose(fp);
-    } else {
-        printf("Error: Unable to write results file.\n");
-    }
+    printf("\n--- Separate Queue Mode ---\n");
+    printf("Total customers served: %d\n", totalServedMulti);
+    printf("Average time in bank: %.2f minutes\n", avgTimeMulti);
+    printf("Average wait time: %.2f minutes\n", avgWaitMulti);
+    printf("Maximum wait time: %.2f minutes\n", maxWaitMulti);
 
+    // Cleanup
     free(customerTimes);
+    free(customers);
     free(tellers);
+    freeQueue(singleQueue);
+    for (int i = 0; i < numTellers; i++) {
+        freeQueue(separateQueues[i]);
+    }
+    free(separateQueues);
+
     return 0;
 }

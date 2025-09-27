@@ -1,38 +1,62 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "queue.h"
 
+// Create new queue
 Queue* createQueue() {
-    Queue* q = (Queue*)malloc(sizeof(Queue));
+    Queue *q = (Queue*)malloc(sizeof(Queue));
     q->front = q->rear = NULL;
+    q->size = 0;
     return q;
 }
 
-void enqueue(Queue *q, Customer c) {
-    Node* temp = (Node*)malloc(sizeof(Node));
-    temp->customer = c;
+// Check if queue is empty
+int isQueueEmpty(Queue *q) {
+    return (q->size == 0);
+}
+
+// Add customer to rear
+void enqueue(Queue *q, Customer cust) {
+    QueueNode *temp = (QueueNode*)malloc(sizeof(QueueNode));
+    temp->cust = cust;
     temp->next = NULL;
-
-    if (!q->rear) {
+    if (q->rear == NULL) {
         q->front = q->rear = temp;
-        return;
+    } else {
+        q->rear->next = temp;
+        q->rear = temp;
     }
-
-    q->rear->next = temp;
-    q->rear = temp;
+    q->size++;
 }
 
+// Remove customer from front
 Customer dequeue(Queue *q) {
-    Customer c = {0};
-    if (!q->front) return c;
-
-    Node* temp = q->front;
-    c = temp->customer;
+    if (isQueueEmpty(q)) {
+        Customer empty = { -1, 0, 0, 0 }; // return invalid customer
+        return empty;
+    }
+    QueueNode *temp = q->front;
+    Customer cust = temp->cust;
     q->front = q->front->next;
-    if (!q->front) q->rear = NULL;
+    if (q->front == NULL) q->rear = NULL;
     free(temp);
-    return c;
+    q->size--;
+    return cust;
 }
 
-int isEmpty(Queue *q) {
-    return q->front == NULL;
+// Peek front customer without removing
+Customer peekQueue(Queue *q) {
+    if (isQueueEmpty(q)) {
+        Customer empty = { -1, 0, 0, 0 };
+        return empty;
+    }
+    return q->front->cust;
+}
+
+// Free memory
+void freeQueue(Queue *q) {
+    while (!isQueueEmpty(q)) {
+        dequeue(q);
+    }
+    free(q);
 }
