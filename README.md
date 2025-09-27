@@ -25,7 +25,7 @@ BankSimulation/
 ├── Makefile             # Build target for qSim
 ├── README.pdf        # Program summary & analysis
 
-#Run programme with(command line codes)
+# Run programme with(command line codes)
 -- gcc src\qSim.c src\event.c src\queue.c src\teller.c src\customer.c -Iinclude -o bin\qSim.exe      #for compile the Bank simulation
 
 --./bin/qSim.exe #customers #tellers simulationTime averageServiceTime   
@@ -37,16 +37,16 @@ BankSimulation/
 
 --ii .\test\average_time_vs_tellers.png  (to see the graph)
 
-#Parameters
+# Parameters
 #customers — number of customers to simulate (integer)
 #tellers — number of tellers (integer)
 simulationTime — simulation time in minutes (float)
 averageServiceTime — average time to serve a customer in minutes (float)
 
-#Issues 
+# Issues 
 -- Occasionally negative average wait times (due to arrival time/service time calculation method).
 -- Large numbers of customers may slow simulation runtime.
-#GNUPlot Graph
+# GNUPlot Graph
 The project includes a GNUPlot script to plot average time in bank vs number of tellers: plot.gnu
 
 
