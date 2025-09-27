@@ -1,0 +1,5 @@
+Total customers served: 120
+Average time in bank: 34.82 minutes
+Extra average wait time: 28.15 minutes
+Maximum wait time: 95.47 minutes
+Standard deviation of time: 40.13 minutes
