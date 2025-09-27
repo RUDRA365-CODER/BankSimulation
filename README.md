@@ -1,16 +1,13 @@
 # BankSimulation
-
 A simulation program for comparing *single queue vs multiple queue systems* in a bank.  
 The simulation analyzes customer wait times, teller service times, and overall efficiency.               
 
 #Contributors
-
 -Rudra Pratap Sahoo(24155648)
 -Ankit Kumar(24155607)
 -Ritesh Das(2405068)
 
 # Folder Structure
-
 BankSimulation/
 ├── src/               # All .c source files
 │   ├── qSim.c
@@ -29,7 +26,6 @@ BankSimulation/
 ├── README.pdf        # Program summary & analysis
 
 #Run programme with(command line codes)
-
 -- gcc src\qSim.c src\event.c src\queue.c src\teller.c src\customer.c -Iinclude -o bin\qSim.exe      #for compile the Bank simulation
 
 --./bin/qSim.exe #customers #tellers simulationTime averageServiceTime   
