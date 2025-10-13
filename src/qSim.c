@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
         enqueue(separateQueues[qIndex], customers[i]);
     }
 
-    // --- Single Queue Simulation ---
+    //single queue//
     for (int i = 0; i < numTellers; i++) tellers[i].availableTime = 0;
     while (!isQueueEmpty(singleQueue)) {
         Customer cust = dequeue(singleQueue);
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 
     double avgTimeSingle = totalTimeInBankSingle / totalServedSingle;
 
-    // --- Separate Queue Simulation ---
+    // Separate Queue Simulation 
     for (int i = 0; i < numTellers; i++) tellers[i].availableTime = 0;
     int customersLeft = numCustomers;
     while (customersLeft > 0) {
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 
     double avgTimeMulti = totalTimeInBankMulti / totalServedMulti;
 
-    // --- Print Stats ---
+    // Print Stats 
     printf("\n--- Single Queue Mode ---\n");
     printf("Total customers served: %d\n", totalServedSingle);
     printf("Average time in bank: %.2f minutes\n", avgTimeSingle);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     printf("Average wait time: %.2f minutes\n", totalWaitTimeMulti / totalServedMulti);
     printf("Maximum wait time: %.2f minutes\n", maxWaitMulti);
 
-    // --- Write results.txt ---
+    //  Write results.txt 
     FILE *fp = fopen("test/results.txt", "a");
     if (fp != NULL) {
         fprintf(fp, "%d %.2f %.2f\n", numTellers, avgTimeSingle, avgTimeMulti);
